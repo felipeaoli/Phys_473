@@ -1,0 +1,12 @@
+# H(z) data 
+# R. Jimenez, L. Verde, T. Treu and D. Stern, Astrophys. J. 593, 622 (2003) [astro-ph/0302560].
+#  J. Simon, L. Verde and R. Jimenez, Phys. Rev. D 71, 123001 (2005) [astro-ph/0412269].
+0.09 69 12
+0.17 83 8.3
+0.27 70 14
+0.40 87 17.4
+0.88 117 23.4
+1.30 168 13.4
+1.43 177 14.2
+1.53 140 14
+1.75 292 40.4
