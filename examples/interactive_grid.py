@@ -11,8 +11,10 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from scipy.integrate import cumulative_trapezoid
 
-# Load chi2 grid from my previous constraints
-# and define h, om sample arrays consistently
+plt.rcParams.update({"text.usetex":False})
+
+# Pre-Loading chi2 grid from my previous run
+# and defining h, om sample arrays consistently
 chi2_grid = np.loadtxt("../data/chi2sn.txt")
 h_samples = np.loadtxt("../data/harr.txt")  # 50 values for h
 om_samples = np.loadtxt("../data/omarr.txt")  # 70 values for om
@@ -36,8 +38,10 @@ def dl_interp(h, om):
 
 dl = lambda zarray, h, om: 5 * np.log10(dl_interp(h, om)(zarray)) + 25
 
+
 # Set up figure and subplots with custom grid
-fig = plt.figure(figsize=(15, 8))
+_figfactor = .8
+fig = plt.figure(figsize=(15*_figfactor, 8*_figfactor), dpi=120)
 gs = fig.add_gridspec(2, 2, height_ratios=[1.6, 1], width_ratios=[1.3, 1.])
 ax1 = fig.add_subplot(gs[0, 0])  # Left upper: Chi-squared contour plot
 ax2 = fig.add_subplot(gs[0, 1])  # Right upper: Predictions plot
@@ -46,7 +50,7 @@ ax4 = fig.add_subplot(gs[1,0])   # Left bottom: Residuals histogram
 
 
 
-# Left subplot: Credible level contours and subsampled points with color-coded levels
+# Left upper subplot: Credible level contours and subsampled points with color-coded levels
 H, OM = np.meshgrid(h_samples, om_samples, indexing='ij')
 confidence_levels = [0, 0.683, 0.95, 0.997][::-1]  # 68%, 95%, 99.7%
 confidence_colors = ["lightblue", "lightgreen", "coral"]
@@ -57,20 +61,21 @@ contour_lines = ax1.contourf(H, OM, np.exp(-(chi2_grid - chi2_grid.min()) / 2),
 
 ax1.contour(H, OM, np.exp(-(chi2_grid - chi2_grid.min()) / 2), 
                             levels=[1 - cl for cl in confidence_levels], color='k',lw=.3) #colors=confidence_colors, alpha=0.4)
-
+point, = ax1.plot([],[], 'rX')
 ax1.set_xlabel("h")
 ax1.set_ylabel("$\\Omega_m$")
-ax1.set_title("Credible Levels")
+ax1.set_title("Credible Levels (in parameter space)\n click on a point here to see the fitting for a given combination of $(h, \\Omega_m)$")
 
 
 
 # Right upper subplot: Predictions and measurements plot
 line_measured = ax2.errorbar(zsn, musn, yerr=sigmu, capsize=3, capthick=0.5, c='dodgerblue', fmt='.')
 line_pred, = ax2.plot([], [], '-', label="Predicted $\\mu(z | h, om)$", color="red", zorder=10)
-ax2.set_title("Predictions vs Union 2.1 data")
+ax2.set_title("Data (Union 2.1) vs Predictions")
 ax2.set_xlabel("z")
-ax2.set_ylabel("$\\mu$")
+ax2.set_ylabel("$\\mu$ (distance modulus)")
 ax2.set_ylim(33, 47)
+ax2.set_xlim(-0.04, 1.5)
 ax2.legend()
 
 
@@ -122,6 +127,9 @@ def onclick(event):
     zsort = np.linspace(0.01, 1.05 * zsn.max(), 100)
     dl_pred = dl(zsort, h_samples[h_index], om_samples[om_index])
     
+    # ax1.plot(h_samples[h_index], om_samples[om_index], '*')
+    point.set_data([h_samples[h_index]], [om_samples[om_index]])
+
     # Update the right upper subplot with new predicted values
     line_pred.set_data(zsort, dl_pred)
     ax2.relim()
@@ -144,7 +152,8 @@ def onclick(event):
     ax4.set_ylabel("Frequency")
     ax4.legend(loc='upper left')
     # Update chi2 display for selected point
-    chi2_text.set_text(f"$\\chi^2$: {chi2_value:.2f} (DoF: {dof})\n($h$, $\\Omega_m$) = ({h_samples[h_index]:.3f}, {om_samples[om_index]:.3f})")
+    chi2_text.set_text(f"$\\chi^2$: {chi2_value:.2f} (DoF: {dof})"+\
+        f"\n$h$, $\\Omega_m$ = ({h_samples[h_index]:.3f}, {om_samples[om_index]:.3f})")
 
     fig.canvas.draw_idle()
 
